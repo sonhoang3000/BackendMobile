@@ -1,32 +1,27 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const { mongoose } = require("mongoose");
+const mongoose = require("mongoose");
 const app = express();
 const PORT = 3000;
 const { mongoUrl } = require("./keys");
 
-require("./models/User");
-const requireToken = require('./middleware/requireToken')
-const authRoutes = require("./routes/authRoutes");
+const initWebRoutes = require("./routes/web");
 
 app.use(bodyParser.json());
-app.use(authRoutes);
+app.use(bodyParser.urlencoded({ extended: false }));
 
-mongoose.connect(mongoUrl, {
-});
+//routes
+// app.use(initWebRoutes);
+initWebRoutes(app);
 
-mongoose.connection.on("connected", () => {
-  console.log("connected to mongo yeah");
-});
-
-mongoose.connection.on("error", (err) => {
-  console.log("error mongo connection", err);
-});
-
-app.get('/', requireToken, (req, res) => {
-  res.send("your email is " + req.user.email)
-})
-
-app.listen(PORT, () => {
-  console.log("server running " + PORT);
-});
+mongoose
+  .connect(mongoUrl)
+  .then(() => {
+    console.log("Connection to database");
+    app.listen(PORT, () => {
+      console.log("Server is running on port " + PORT);
+    });
+  })
+  .catch(() => {
+    console.log("Connection failed!");
+  });
